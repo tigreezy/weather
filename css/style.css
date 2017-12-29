@@ -1,0 +1,44 @@
+html {
+	background-color: #161616;
+	/*-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;*/
+	/*background-size: 50%;*/
+	/*background-position: center center;*/
+	height: 100%;
+}
+
+body {
+	background-color: transparent;
+	/*background-color: skyblue;*/
+	/*background-color: #2a2a35;*/
+	color: white;
+}
+
+.bg {
+	/*background-image: url("http://trunkweed.com/uploads/posts/images/4514-moon.jpg");*/
+	height = 100%;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.title {
+	/*color: white;*/
+	/*color: #ffcc66;*/
+	font-size: 70px;
+	margin-bottom: 100px;
+}
+
+#degree {
+	color: white;
+}
+
+a:hover {
+	text-decoration: none;
+	opacity: 0.7;
+}
+
+#degree h2:hover {
+	opacity: 0.7;
+}

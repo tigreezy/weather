@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Local Weather</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" type="text/css">
+	<link rel="stylesheet" href="css/weather-icons.css">
+	<link rel="stylesheet" href="css/weather-icons-wind.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+	<link rel="stylesheet" href="css/style.css">
+
+	<script>
+		var lat, lon, api, tempC, tempF;
+		var time = Math.round((new Date()).getTime() / 1000) + 86400;
+		var day = true;
+		var celsius = true;
+
+		function getLocation() {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(setWeather);
+			} else {
+				$("#location").html("Location not available");
+				$("#degree").html("Temperature not available");
+				$("#weather").html("Weather not available");
+			}
+		}
+
+		function setWeather(position) {
+			lat = position.coords.latitude;
+			lon = position.coords.longitude;
+			api = "https://cors-anywhere.herokuapp.com/https://fcc-weather-api.glitch.me/api/current?lat=" + lat.toString() + "&lon=" + lon.toString();
+			$.getJSON(api, function(result) {
+				setTemp(result.main.temp);
+				$("html").addClass("bg");
+				if ((result.sys.sunrise - 1800 < time && time < result.sys.sunrise + 1800) || (result.sys.sunset - 1800 < time && time < result.sys.sunset + 1800)) {
+					$("#d-icon").addClass("wi wi-day-cloudy");
+					$(".bg").css("background-image", 'url("http://donnajacobspsychologist.com/wp-content/uploads/sites/2702/2016/01/home-slider-1.jpg")');
+				}
+				else if (result.sys.sunrise < time && time < result.sys.sunset ) {
+					$("#d-icon").addClass("wi wi-day-cloudy");
+					$(".bg").css("background-image", 'url("http://www.fellowshipbbc.org/wp-content/uploads/2013/07/sun-above-clouds-1920x1200.png")');
+				} else {
+					$("#d-icon").addClass("wi wi-night-alt-cloudy");
+					$(".bg").css("background-image", 'url("http://cfile25.uf.tistory.com/image/126735264BF78B7749AD8A")');
+					day = false;
+				}
+				$("#wind-icon").addClass("wi wi-wind-beaufort-" + Math.floor(result.wind.speed));
+				$("#location").html(result.name + ", " + result.sys.country);
+				$("#degree").html("<h2>" + tempC + "</h2>");
+				$("#weather").html(result.weather[0].main + " - " + result.weather[0].description);
+				if (result.weather[0].main == "Rain") {
+					$("#weather-icon").addClass("wi wi-showers");
+				} else if (result.weather[0].main == "Snow") {
+					$("#weather-icon").addClass("wi wi-sleet");
+				} else if (result.weather[0].main == "Hail") {
+					$("#weather-icon").addClass("wi wi-hail");
+				} else if (result.weather[0].main == "Cloudy") {
+					$("#weather-icon").addClass("wi wi-cloudy");
+				} else if (result.weather[0].main == "Windy") {
+					$("#weather-icon").addClass("wi wi-cloudy-gusts");
+				} else if (result.weather[0].main == "Thunderstorm") {
+					$("#weather-icon").addClass("wi wi-thunderstorm");
+				} else {
+					if(day) $("#weather-icon").addClass("wi wi-day-sunny");
+					else $("#weather-icon").addClass("wi wi-night-clear");
+				}
+			});
+		}
+
+		function setTemp(temp) {
+			tempC = Math.round(temp * 10) / 10 + " &#176;C";
+			tempF = Math.round(temp * 90) / 50 + 32 + " &#176;F";
+		}
+
+		$(document).ready(function() {
+			getLocation();
+			$("#degree").click(function() {
+				if(celsius) $("#degree").html("<h2>" + tempF + "</h2>");
+				else $("#degree").html("<h2>" + tempC + "</h2>");
+				celsius = !celsius;
+			});
+		});
+	</script>
+</head>
+<body class="text-center">
+	<h1 class="title"><i id="d-icon"></i> Weather App <i id="wind-icon"></i></h1>
+	<div>
+		<h1 id="location"></h1>
+		<div><a id="degree" href="#"></a></div>
+		<h3 id="weather"></h3>
+		<h2><i id="weather-icon"></i></h2>
+		<h5>Made by <a href="../portfolio/index.html" style="color: white">Tiger Chen</a></h5>
+	</div>
+</body>
+</html>
