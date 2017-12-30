@@ -16,12 +16,17 @@
 	<script>
 		var lat, lon, city, state;
 		var fa_high, fa_low, ce_high, ce_low;
-		var fahrenheit = true;
 		var api_url = "https://cors-anywhere.herokuapp.com/http://api.wunderground.com/api/cdff4c724637fed7/";
+
+		var backgrounds = ['http://cfile25.uf.tistory.com/image/126735264BF78B7749AD8A', 'https://www.walldevil.com/wallpapers/a20/landscape-background-apple-summer-mac-ground-back-wallpaper.jpg','http://thewallpaper.co/wp-content/uploads/2016/01/amazing-views-nature-wallpaper-for-samsung-hd-landscape-wallpapers-plants-sky-free-images-apple-background-images-best-nature-images-2048x1303.jpg', 'http://thewallpaper.co/wp-content/uploads/2016/01/amazing-views-nature-wallpaper-for-samsung-hd-landscape-wallpapers-plants-sky-flowers-windows-desktop-images-apple-background-images-1920x1026.jpg', 'http://www.cheapflightslab.com/wp-content/uploads/2016/10/London-clock-landscape-nature-canada-corner.jpg', 'http://cdn.wall-pix.net/albums/landscapes-natural/00000267.jpg', 'https://jhsroaringtimes.org/wp-content/uploads/2016/04/clouds_and_dark_sunset_lakes-2560x1600.jpg', 'http://hospitaleslapaz.com/wp-content/uploads/2016/04/purple_beach_landscape-wallpaper-1920x1080.jpg'];
 
 		function getLocation() {
 			if(navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(setPosition);
+				navigator.geolocation.getCurrentPosition(setPosition, function() {
+					$(".search").hide();
+					$("input").show();
+					$("input").focus();
+				});
 			} else {
 				$("#location").html("Choose location");
 			}
@@ -80,9 +85,21 @@
 			}
 		}
 
-		$("html").addClass("bg");
-		$(".bg").css("background-image", 'url("http://cfile25.uf.tistory.com/image/126735264BF78B7749AD8A")');
+		
 
+		function toggleBackground() {
+			num = (num + 1) % backgrounds.length
+			$("html").animate({ opacity: 0}, 1000, function() {
+				$(".bg").css("background-image", 'url("' + backgrounds[num] + '")');
+				$(this).animate({opacity: 1}, 1000, function() {
+					
+				})
+			});	
+		}
+		$("html").addClass("bg");
+		var num = Math.floor(Math.random() * backgrounds.length);
+		$(".bg").css("background-image", 'url("' + backgrounds[num] + '")');
+		
 		$(document).ready(function() {
 			getLocation();
 			$("#d-icon").addClass("wi wi-day-cloudy");
@@ -105,9 +122,9 @@
 				});
 			});
 
-			$("input").keypress(function(e) {
+			$("input").keypress(function(event) {
 				var search = $("input").val();
-				if(e.which == 13) {
+				if(event.which == 13 && search.length > 0) {
 					$.getJSON("https://cors-anywhere.herokuapp.com/http://autocomplete.wunderground.com/aq?query=" + encodeURIComponent(search), function(result) {
 						var temp = result.RESULTS[0].name.split(", ");
 						city = temp[0];
@@ -121,6 +138,21 @@
 						$("table").css("visibility", "visible");
 						});
 					});
+				} else if(event.which == 13){
+					$("input").focusout();
+				} else if(event.which == 27) {
+					$("input").focusout();
+				}
+			});
+
+			$(document).keypress(function(event) {
+				if(event.which == 47) {
+					toggleBackground();
+					$("input").val("");
+				} else if(event.which == 13) {
+					$(".search").hide();
+					$("input").show();
+					$("input").focus();
 				}
 			});
 		});
@@ -155,7 +187,9 @@
 				</tr>
 			</thead>
 		</table>
-		<h5>Made by <a href="../portfolio/index.html" style="color: white">Tiger Chen</a></h5>
+		<!-- <h5>Made by <a href="../portfolio/index.html" style="color: white">Tiger Chen</a></h5> -->
+		<br>
+		<a href="https://www.wunderground.com">Powered by <img class="credit" src="https://icons.wxug.com/logos/PNG/wundergroundLogo_4c_rev_horz.png"></a>
 	</div>
 </body>
 </html>
