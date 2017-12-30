@@ -9,89 +9,152 @@
 	<link rel="stylesheet" href="css/weather-icons.css">
 	<link rel="stylesheet" href="css/weather-icons-wind.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 	<link rel="stylesheet" href="css/style.css">
 
 	<script>
-		var lat, lon, api, tempC, tempF;
-		var time = Math.round((new Date()).getTime() / 1000) + 86400;
-		var day = true;
-		var celsius = true;
+		var lat, lon, city, state;
+		var fa_high, fa_low, ce_high, ce_low;
+		var fahrenheit = true;
+		var api_url = "https://cors-anywhere.herokuapp.com/http://api.wunderground.com/api/cdff4c724637fed7/";
 
 		function getLocation() {
-			if (navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(setWeather);
+			if(navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(setPosition);
 			} else {
-				$("#location").html("Location not available");
-				$("#degree").html("Temperature not available");
-				$("#weather").html("Weather not available");
+				$("#location").html("Choose location");
 			}
 		}
 
-		function setWeather(position) {
+		function setPosition(position) {
 			lat = position.coords.latitude;
 			lon = position.coords.longitude;
-			api = "https://cors-anywhere.herokuapp.com/https://fcc-weather-api.glitch.me/api/current?lat=" + lat.toString() + "&lon=" + lon.toString();
-			$.getJSON(api, function(result) {
-				setTemp(result.main.temp);
-				$("html").addClass("bg");
-				if ((result.sys.sunrise - 1800 < time && time < result.sys.sunrise + 1800) || (result.sys.sunset - 1800 < time && time < result.sys.sunset + 1800)) {
-					$("#d-icon").addClass("wi wi-day-cloudy");
-					$(".bg").css("background-image", 'url("http://donnajacobspsychologist.com/wp-content/uploads/sites/2702/2016/01/home-slider-1.jpg")');
-				}
-				else if (result.sys.sunrise < time && time < result.sys.sunset ) {
-					$("#d-icon").addClass("wi wi-day-cloudy");
-					$(".bg").css("background-image", 'url("http://www.fellowshipbbc.org/wp-content/uploads/2013/07/sun-above-clouds-1920x1200.png")');
-				} else {
-					$("#d-icon").addClass("wi wi-night-alt-cloudy");
-					$(".bg").css("background-image", 'url("http://cfile25.uf.tistory.com/image/126735264BF78B7749AD8A")');
-					day = false;
-				}
-				$("#wind-icon").addClass("wi wi-wind-beaufort-" + Math.floor(result.wind.speed));
-				$("#location").html(result.name + ", " + result.sys.country);
-				$("#degree").html("<h2>" + tempC + "</h2>");
-				$("#weather").html(result.weather[0].main + " - " + result.weather[0].description);
-				if (result.weather[0].main == "Rain") {
-					$("#weather-icon").addClass("wi wi-showers");
-				} else if (result.weather[0].main == "Snow") {
-					$("#weather-icon").addClass("wi wi-sleet");
-				} else if (result.weather[0].main == "Hail") {
-					$("#weather-icon").addClass("wi wi-hail");
-				} else if (result.weather[0].main == "Cloudy") {
-					$("#weather-icon").addClass("wi wi-cloudy");
-				} else if (result.weather[0].main == "Windy") {
-					$("#weather-icon").addClass("wi wi-cloudy-gusts");
-				} else if (result.weather[0].main == "Thunderstorm") {
-					$("#weather-icon").addClass("wi wi-thunderstorm");
-				} else {
-					if(day) $("#weather-icon").addClass("wi wi-day-sunny");
-					else $("#weather-icon").addClass("wi wi-night-clear");
-				}
-			});
+			setWeather();
 		}
 
-		function setTemp(temp) {
-			tempC = Math.round(temp * 10) / 10 + " &#176;C";
-			tempF = Math.round(temp * 90) / 50 + 32 + " &#176;F";
+		function setWeather() {
+			$.getJSON(api_url + "geolookup/q/" + lat +"," + lon + ".json", function(result) {
+				city = result.location.city.replace(" ", "_");
+				state = result.location.state;
+			}).then(function() {
+				$.getJSON(api_url + "forecast10day/q/" + state +"/" + city + ".json", function(result) {
+				var forecast = result.forecast.simpleforecast.forecastday;
+				showTemp(forecast);
+				$("#location").html(city + ", " + state);
+				$("table").css("visibility", "visible");
+				});
+			}, function() {
+				alert("Forecast retrieval failed");
+			});	
 		}
+
+		function showTemp(forecast) {
+			for(var i=1; i<=7; i++) {
+				var fc = forecast[i-1];
+				$("#day"+i).html("<h4>" + fc.date.weekday + "</h4>");
+				$("#dt"+i).html("<h5>" + fc.conditions + "</h5>");
+				if(fc.conditions.includes("Cloudy")){
+					$("#dt"+i).append('<i class="wi wi-cloudy" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Rain")){
+					$("#dt"+i).append('<i class="wi wi-showers" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Snow")){
+					$("#dt"+i).append('<i class="wi wi-sleet" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Hail")){
+					$("#dt"+i).append('<i class="wi wi-hail" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Wind")){
+					$("#dt"+i).append('<i class="wi wi-cloudy-gusts" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Thunder")){
+					$("#dt"+i).append('<i class="wi wi-thunderstorm" style="font-size: 25px"></i><br><br>');
+				} else if(fc.conditions.includes("Fog")){
+					$("#dt"+i).append('<i class="wi wi-fog" style="font-size: 25px"></i><br><br>');
+				} else {
+					$("#dt"+i).append('<i class="wi wi-day-sunny" style="font-size: 25px"></i><br><br>');
+				}
+				fa_high = fc.high.fahrenheit;
+				fa_low = fc.low.fahrenheit;
+				ce_high = fc.high.celsius;
+				ce_low = fc.low.celsius;
+				$("#dt"+i).append("High: " + fa_high + "&#176;F<br>Low: " + fa_low +"&#176;F<br>");
+				$("#dt"+i).append("Wind: " + fc.avewind.mph + " mph ");
+			}
+		}
+
+		$("html").addClass("bg");
+		$(".bg").css("background-image", 'url("http://cfile25.uf.tistory.com/image/126735264BF78B7749AD8A")');
 
 		$(document).ready(function() {
 			getLocation();
-			$("#degree").click(function() {
-				if(celsius) $("#degree").html("<h2>" + tempF + "</h2>");
-				else $("#degree").html("<h2>" + tempC + "</h2>");
-				celsius = !celsius;
+			$("#d-icon").addClass("wi wi-day-cloudy");
+
+			$(".search").each(function() {
+				var label = $(this);
+				label.after('<input type="text" style="display: none"/>');
+				var textbox = $(this).next();
+
+				label.click(function() {
+					$(this).hide();
+					$(this).next().show();
+					$(this).next().focus();
+				});
+				textbox.focusout(function() {
+					$(this).hide();
+					$(this).val("");
+					$(this).prev().html(city + ", " + state);
+					$(this).prev().show();
+				});
+			});
+
+			$("input").keypress(function(e) {
+				var search = $("input").val();
+				if(e.which == 13) {
+					$.getJSON("https://cors-anywhere.herokuapp.com/http://autocomplete.wunderground.com/aq?query=" + encodeURIComponent(search), function(result) {
+						var temp = result.RESULTS[0].name.split(", ");
+						city = temp[0];
+						state = temp[1];
+					}).then(function() {
+						$("input").focusout();
+						$("table").css("visibility", "hidden");
+						$.getJSON(api_url + "forecast10day/q/" + state +"/" + city + ".json", function(result) {
+						var forecast = result.forecast.simpleforecast.forecastday;
+						showTemp(forecast);
+						$("table").css("visibility", "visible");
+						});
+					});
+				}
 			});
 		});
 	</script>
 </head>
 <body class="text-center">
 	<h1 class="title"><i id="d-icon"></i> Weather App <i id="wind-icon"></i></h1>
-	<div>
-		<h1 id="location"></h1>
-		<div><a id="degree" href="#"></a></div>
-		<h3 id="weather"></h3>
-		<h2><i id="weather-icon"></i></h2>
+	<div class="container-fluid">
+		<h2 class="search" id="location"></h2>
+		<!-- <div class="degree">
+			<p>&#176;F | <a href="#">&#176;C</a></p>
+		</div> -->
+		<table class="table table-hover well">
+			<thead>
+				<tr>
+					<th id="day1"></th>
+					<th id="day2"></th>
+					<th id="day3"></th>
+					<th id="day4"></th>
+					<th id="day5"></th>
+					<th id="day6"></th>
+					<th id="day7"></th>
+				</tr>
+				<tr>
+					<td id="dt1"></td>
+					<td id="dt2"></td>
+					<td id="dt3"></td>
+					<td id="dt4"></td>
+					<td id="dt5"></td>
+					<td id="dt6"></td>
+					<td id="dt7"></td>
+				</tr>
+			</thead>
+		</table>
 		<h5>Made by <a href="../portfolio/index.html" style="color: white">Tiger Chen</a></h5>
 	</div>
 </body>
